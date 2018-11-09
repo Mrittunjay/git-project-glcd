@@ -1,4 +1,5 @@
-//SAMPLE CODE FOR THE DRIVER 
+//SAMPLE CODE FOR THE DRIVER
+#include "m0564.h"
 #include "bmp_image.h"
 #include "myglcd.h"
 
