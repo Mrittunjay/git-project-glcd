@@ -9,19 +9,21 @@ void my_delay(unsigned int del) {
 }
 
 void glcd_command(unsigned char command) {
-		RS = 0;
+		RW = 1;
+		RS = 1;
 		outpb(PB, command<<3);
-		E = 1;
-		my_delay(5);
 		E = 0;
+		my_delay(5);
+		E = 1;
 }
 
 void glcd_data(unsigned char data) {
+		RW = 1;
 		RS = 0;
 		outpb(PB, (data<<3));
-		E=1;
-		my_delay(5);
 		E=0;
+		my_delay(5);
+		E=1;
 }
 void glcd_initilization(void) {
 		int i;
@@ -29,9 +31,9 @@ void glcd_initilization(void) {
 		for(i=0; i<15; i++) {
 			GPIO_SetMode(PC, 1<<i, GPIO_MODE_OUTPUT);
 		}
-		RST = 1;
-		CS2 = 1;
-		CS1 = 1;
+		RST = 0;
+		CS2 = 0;
+		CS1 = 0;
 		my_delay(30);
 		glcd_command(0x3E);
 		glcd_command(0x40);
@@ -43,14 +45,14 @@ void glcd_initilization(void) {
 void glcd_clean(void) {
 		int i, j;
 		for(i=0;i<8;i++) {
-				CS2 = 1;
-				CS1 = 0;
+				CS2 = 0;
+				CS1 = 1;
 				glcd_command(0xB8 + i);
 				for(j=0;j<64;j++)
 						glcd_data(0);
 
-				CS1 = 1;
-				CS2 = 0;
+				CS1 = 0;
+				CS2 = 1;
 				glcd_command(0xB8 + i);
 				for(j=0;j<64;j++)
 						glcd_data(0);
@@ -64,8 +66,8 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
 		unsigned int i,column,Page=((0xB8)+page_no),Y_address=0;	
 		float Page_inc=0.5;													
 	
-		CS2 = 1; 
-		CS1 = 0;	/* Select Left half of display */
+		CS2 = 0; 
+		CS1 = 1;	/* Select Left half of display */
 	
 		glcd_command(Page);
 		
@@ -81,14 +83,14 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
           
 										glcd_command(0x40);
 										Y_address = Y_address+column;
-										if(CS1 != 0)
-											CS1 = 0;
-										else
+										if(CS1 != 1)
 											CS1 = 1;
-										if(CS2 == 0)
-											CS2 = 1;
 										else
+											CS1 = 0;
+										if(CS2 == 1)
 											CS2 = 0;
+										else
+											CS2 = 1;
 										
 										glcd_command((Page+Page_inc));
 										Page_inc=Page_inc+0.5;
@@ -107,14 +109,14 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
 								//glcd_data(*(code_page[1] + char_to_print_2));	
 								glcd_data(FONT[string_to_print[i]-32][column]);
 								if((Y_address+1)%64==0) {
-										if(CS1 != 0)
-											CS1 = 0;
-										else
+										if(CS1 != 1)
 											CS1 = 1;
-										if(CS2 == 0)
-											CS2 = 1;
 										else
+											CS1 = 0;
+										if(CS2 == 1)
 											CS2 = 0;
+										else
+											CS2 = 1;
 										
 										glcd_command((Page+Page_inc));
 										Page_inc=Page_inc+0.5;
@@ -129,14 +131,14 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
 								//glcd_data(*(code_page[1] + char_to_print_3));	
 								glcd_data(FONT[string_to_print[i]-32][column]);
 								if((Y_address+1)%64==0) {
-											if(CS1 != 0)
-												CS1 = 0;
-											else
+											if(CS1 != 1)
 												CS1 = 1;
-											if(CS2 == 0)
-												CS2 = 1;
 											else
+												CS1 = 0;
+											if(CS2 == 1)
 												CS2 = 0;
+											else
+												CS2 = 1;
 											
 											glcd_command((Page+Page_inc));
 											Page_inc=Page_inc+0.5;
@@ -148,14 +150,14 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
 						Y_address++;
 						
 						if((Y_address)%64==0) {
-								if(CS1 != 0)
-									CS1 = 0;
-								else
+								if(CS1 != 1)
 									CS1 = 1;
-								if(CS2 == 0)
-									CS2 = 1;
 								else
+									CS1 = 0;
+								if(CS2 == 1)
 									CS2 = 0;
+								else
+									CS2 = 1;
 								
 								glcd_command((Page+Page_inc));
 								Page_inc=Page_inc+0.5;
@@ -170,21 +172,21 @@ void glcd_print_string(unsigned char page_no, char *string_to_print) {
 void glcd_print_image(const unsigned char *pic) {
 		int column, page, page_add = 0xB8, k = 0;
 		float page_inc = 0.5;
-		CS2 = 1;
-		CS1 = 0;
+		CS2 = 0;
+		CS1 = 1;
 		for(page=0;page<16;page++) {
 			for(column=0;column<64;column++) {
 				glcd_data(pic[column+k]);
 			}
 			
-			if(CS1 != 0)
-				CS1 = 0;
-			else
+			if(CS1 != 1)
 				CS1 = 1;
-			if(CS2 == 0)
-				CS2 = 1;
 			else
+				CS1 = 0;
+			if(CS2 == 1)
 				CS2 = 0;
+			else
+				CS2 = 1;
 
 			glcd_command((page_add+page_inc));
 			page_inc = page_inc+0.5;
